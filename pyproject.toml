@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "Local LLM Chatbox"
+version = "0.0.1"
+description = ""
+authors = ["Mai Minh Pham <minh.pham@columbia.edu>"]
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.9.7 || >3.9.7,<4.0"
+ipykernel = "^6.29.4"
+streamlit = "^1.33.0"
+requests = "^2.31.0"
+langchain-community = "^0.0.34"
+llama-index = "^0.10.31"
+llama-index-llms-ollama = "^0.1.2"
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.4.0"
+isort = "^5.13.2"
+ruff = "^0.4.1"
+
+[tool.black]
+line-length = 88
+target-version = ["py39"]
+
+[tool.isort]
+profile = "black"
+known_firstparty = ""
+line_length = 88
+multi_line_output = 3
+py_version = 39
+
+[tool.ruff]
+line-length = 88
+target-version = "py39"
+ignore = ["E712"]
