@@ -6,12 +6,10 @@ from llama_index.core.llms import ChatMessage, MessageRole
 from llama_index.core import PromptTemplate
 from llama_index.llms.ollama import Ollama
 
-LAST_RESPONSE_META = None
 
 
-def get_response(user_query: str, chat_history: list[ChatMessage]) -> Generator[str, None, None]:
+def get_response(user_query: str, chat_history: list[ChatMessage]) -> Generator:
     """response to be streamed"""
-    global LAST_RESPONSE_META
 
     template = PromptTemplate(
         "You are a helpful assistant. Answer the following questions considering the history of the conversation:\n"
@@ -25,10 +23,7 @@ def get_response(user_query: str, chat_history: list[ChatMessage]) -> Generator[
 
     llm = Ollama(model="llama3")
 
-    for r in llm.stream_complete(prompt):
-        if r.additional_kwargs["done"]:
-            LAST_RESPONSE_META = r.additional_kwargs
-        yield r.delta
+    return llm.stream_complete(prompt)
 
 
 def metadata(last_response_meta: dict[str, Any]) -> str:
@@ -43,7 +38,6 @@ def metadata(last_response_meta: dict[str, Any]) -> str:
 
 
 def main():
-    global LAST_RESPONSE_META
     st.set_page_config(page_title="ChadGPT", page_icon="🤖")
     st.title("ChadGPT - 💪😎🏋️‍♂️")
     st.subheader("The poor man's ChatGPT")
@@ -77,13 +71,15 @@ def main():
             st.markdown(user_query)
 
         with st.chat_message("AI"):
-            response = st.write_stream(
-                get_response(user_query, st.session_state.chat_history)
-            )
-
-        if LAST_RESPONSE_META is not None:
-            st.caption(metadata(LAST_RESPONSE_META))
-            LAST_RESPONSE_META = None
+            with st.spinner("Thinking..."):
+                placeholder = st.empty()
+                for r in get_response(user_query, st.session_state.chat_history):
+                    placeholder.markdown(r.text)
+                    if r.additional_kwargs["done"]:
+                        last_response_meta = r.additional_kwargs
+                placeholder.markdown(r.text)
+                response = r.text
+            st.caption(metadata(last_response_meta))
 
         st.session_state.chat_history.append(
             ChatMessage(role=MessageRole.CHATBOT, content=response)
